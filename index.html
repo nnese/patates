@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Patates Soyucu — First Person</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div id="ui">
+    <div id="hud">
+      <div class="hud-card">
+        <span class="label">Para</span>
+        <span id="money">$0.00</span>
+      </div>
+      <div class="hud-card">
+        <span class="label">Soyulma</span>
+        <span id="peel-pct">—</span>
+      </div>
+      <div class="hud-card">
+        <span class="label">Hasar</span>
+        <span id="damage">—</span>
+      </div>
+      <div class="hud-card">
+        <span class="label">Kalite</span>
+        <span id="quality">—</span>
+      </div>
+      <div class="hud-card">
+        <span class="label">Combo</span>
+        <span id="combo">x1</span>
+      </div>
+      <div id="admin-hud" class="hud-card admin-hud hidden">
+        <span class="label">Mod</span>
+        <span>ADMIN</span>
+      </div>
+    </div>
+
+    <div id="crosshair"></div>
+    <div id="knife-cursor" class="hidden" aria-hidden="true">
+      <!-- tip at top (contacts potato), handle bottom-right, slight tilt via CSS -->
+      <svg viewBox="0 0 100 240" width="78" height="176">
+        <defs>
+          <linearGradient id="bladeGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#f7f9fb"/>
+            <stop offset="50%" stop-color="#c5ced6"/>
+            <stop offset="100%" stop-color="#7f8993"/>
+          </linearGradient>
+          <linearGradient id="handleGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#7a4a28"/>
+            <stop offset="100%" stop-color="#3a2212"/>
+          </linearGradient>
+        </defs>
+        <!-- gray tip (contact point) -->
+        <path d="M50 6 L68 58 L32 58 Z" fill="url(#bladeGrad)" stroke="#5a6570" stroke-width="1.2"/>
+        <!-- blade -->
+        <path d="M34 56 L66 56 L62 150 L38 150 Z" fill="url(#bladeGrad)" stroke="#5a6570" stroke-width="1.4"/>
+        <path d="M66 56 L74 68 L62 150 L66 150 Z" fill="#98a2ac"/>
+        <path d="M34 56 L38 150 L28 138 L30 68 Z" fill="#eef3f7" opacity="0.95"/>
+        <!-- bolster -->
+        <rect x="32" y="148" width="36" height="12" rx="2" fill="#b0b8c0" stroke="#5a626a" stroke-width="1.2"/>
+        <!-- handle -->
+        <rect x="38" y="158" width="24" height="70" rx="6" fill="url(#handleGrad)" stroke="#24140a" stroke-width="1.5"/>
+        <line x1="44" y1="170" x2="44" y2="218" stroke="#24140a" stroke-opacity="0.35" stroke-width="1.2"/>
+        <line x1="56" y1="170" x2="56" y2="218" stroke="#24140a" stroke-opacity="0.35" stroke-width="1.2"/>
+      </svg>
+      <div id="knife-tip-dot"></div>
+    </div>
+    <div id="prompt"></div>
+    <div id="toast"></div>
+
+    <div id="peel-bar-wrap" class="hidden">
+      <div class="peel-meta">
+        <span id="peel-type">WASD çevir · Sol tık bıçakla soy</span>
+        <span id="peel-target">Hedef: %100</span>
+      </div>
+      <div id="peel-bar"><div id="peel-fill"></div></div>
+    </div>
+
+    <div id="top-actions">
+      <button id="btn-menu" type="button" title="Menü">☰</button>
+      <button id="btn-manual" type="button" title="Kontroller">?</button>
+    </div>
+
+    <div id="menu" class="hidden">
+      <div class="menu-panel">
+        <button id="menu-close" type="button" aria-label="Kapat">×</button>
+        <h1>Ara Menü</h1>
+        <p class="tagline">Esc ile aç/kapa · İlerleme otomatik kaydolur</p>
+        <p id="menu-save-status" class="menu-save">Kayıt yükleniyor…</p>
+
+        <div class="menu-actions menu-actions-stack">
+          <button id="btn-resume" type="button" class="primary">Resume — Devam</button>
+          <button id="btn-menu-start" type="button">Start — Başla / Ana ekran</button>
+          <button id="btn-admin-toggle" type="button" class="admin-btn">Admin Test Modu</button>
+          <button id="btn-menu-settings" type="button">Settings — Ayarlar</button>
+          <button id="btn-open-manual" type="button">Kontroller</button>
+          <button id="btn-quit" type="button" class="danger">Quit — Çıkış</button>
+        </div>
+
+        <div id="settings-panel" class="settings-panel hidden">
+          <h2>Settings</h2>
+          <label class="setting" for="sens-slider">
+            <span class="setting-label">
+              Mouse hassasiyeti
+              <strong id="sens-value">1.00</strong>
+            </span>
+            <input id="sens-slider" type="range" min="0.2" max="3" step="0.05" value="1" />
+            <span class="setting-hint">Düşük = yavaş bakış · Yüksek = hızlı bakış</span>
+          </label>
+        </div>
+
+        <p class="menu-note">Para ve satın alınan itemlar tarayıcıda saklanır.</p>
+      </div>
+    </div>
+
+    <div id="manual" class="hidden">
+      <div class="manual-panel">
+        <button id="manual-close" type="button" aria-label="Kapat">×</button>
+        <h1>Patates Soyucu</h1>
+        <p class="tagline">Hasarsız soy, daha çok kazan. %100 soyulmalı.</p>
+
+        <h2>Hareket</h2>
+        <ul>
+          <li><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> — yürü</li>
+          <li><kbd>Space</kbd> — zıpla (masanın üstüne çıkabilirsin)</li>
+          <li><kbd>Shift</kbd> — koş</li>
+          <li>Fare — bakış (hassasiyet menüden ayarlanır)</li>
+          <li><kbd>Esc</kbd> — menü / fareyi serbest bırak</li>
+        </ul>
+
+        <h2>Etkileşim</h2>
+        <ul>
+          <li><kbd>E</kbd> veya <kbd>Sol Tık</kbd> — patates al / koy / masaya yerleştir</li>
+          <li><kbd>F</kbd> — elindeki patatesi bırak</li>
+          <li><kbd>Q</kbd> — patatesi havaya al / bıçak</li>
+          <li><kbd>WASD</kbd> — (bıçak açıkken) patatesi çevir</li>
+          <li><kbd>Sol Tık</kbd> — bıçağı gezdirip soy</li>
+          <li><kbd>Esc</kbd> / <kbd>M</kbd> — ayar menüsü</li>
+          <li><kbd>E</kbd> — soldaki <strong>dükkana</strong> gir (yakındayken)</li>
+          <li><kbd>H</kbd> veya <kbd>?</kbd> — bu kılavuzu aç/kapa</li>
+        </ul>
+
+        <h2>Akış</h2>
+        <ol>
+          <li>Yerdeki patates dağından patates al.</li>
+          <li>Masanın <strong>sol</strong> rafına koy (bekleyen stok).</li>
+          <li>Soldan alıp masanın ortasına yerleştir · Q ile soy.</li>
+          <li>%100 olunca yere yakın <strong>kasaya</strong> gider.</li>
+          <li>Kasadan dağ gibi alıp <strong>su kanalına</strong> at — para orada gelir.</li>
+          <li>Soldaki dükkandan bıçak, kapasite, hız, otomatik makine ve <strong>köpek maması</strong> al.</li>
+          <li>Yavru köpek ~30 dk’da bir acıkır, havlar · minderdeki mama kabından E ile besle.</li>
+        </ol>
+      </div>
+    </div>
+
+    <div id="shop" class="hidden">
+      <div class="shop-panel">
+        <button id="shop-close" type="button" aria-label="Kapat">×</button>
+        <div class="shop-head">
+          <div>
+            <p class="brand">DEPO DÜKKANI</p>
+            <h1>Ekipman & Makine</h1>
+            <p class="tagline">Bütçene göre yükselt — her şey satın alınabilir.</p>
+          </div>
+          <div class="shop-balance">
+            <span id="shop-balance-label">Bakiye</span>
+            <strong id="shop-money">$0.00</strong>
+          </div>
+        </div>
+        <p id="shop-admin-banner" class="shop-admin-banner hidden">ADMIN TEST · ücretsiz seç · normal kayıt etkilenmez</p>
+        <div class="shop-tabs" id="shop-tabs">
+          <button type="button" class="shop-tab active" data-tab="tools">Aletler</button>
+          <button type="button" class="shop-tab" data-tab="features">Özellikler</button>
+          <button type="button" class="shop-tab" data-tab="auto">Otomasyon</button>
+        </div>
+        <div id="shop-list" class="shop-list"></div>
+        <p class="shop-foot">Esc / E / × ile kapat · Satın alınanlar kaydedilir</p>
+      </div>
+    </div>
+
+    <div id="start-screen">
+      <div class="start-card">
+        <p class="brand">PATATES SOYUCU</p>
+        <h1>Soğuk depoda gece vardiyası</h1>
+        <p>Yığından topla, masada soy, hasarsız ürün sat.</p>
+        <p id="start-save-info" class="start-save">Kayıtlı ilerleme yüklenecek</p>
+        <button id="btn-start" type="button">Start — Başla</button>
+        <button id="btn-start-admin" type="button" class="admin-start">Admin Test Modu</button>
+        <button id="btn-start-settings" type="button" class="ghost">Settings</button>
+        <p class="hint">WASD · Space · Esc menü · otomatik kayıt · Admin normal kaydı değiştirmez</p>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="c"></canvas>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="game.js"></script>
+</body>
+</html>
